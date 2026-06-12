@@ -10,9 +10,7 @@
 
 ## 截图
 
-| 菜单栏 | 下拉面板 |
-|:---:|:---:|
-| <img src="docs/screenshot-menubar.png" width="360" alt="菜单栏" /> | <img src="docs/screenshot-panel.png" width="360" alt="下拉面板" /> |
+<img src="docs/screenshot-panel.png" width="360" alt="下拉面板" />
 
 ```
 菜单栏:  ⏲ 4% · 3%
