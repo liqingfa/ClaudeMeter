@@ -1,0 +1,14 @@
+# Xcode project is generated from project.yml via XcodeGen
+ClaudeMeter.xcodeproj/
+
+# Xcode build artifacts
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+.DS_Store
+
+# Exported app
+*.app
+*.dmg
+*.zip
