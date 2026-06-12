@@ -4,7 +4,7 @@
 
 - 🕔 **5 小时额度** 利用率 + 精确刷新时间（倒计时）
 - 📅 **周额度** 利用率 + 精确刷新时间（倒计时）
-- 🤖 **各模型用量**（Opus / Sonnet / Haiku 的 token 消耗，按 全部 / 30天 / 7天 分别统计）
+- 🤖 **各模型用量**（按 全部 / 30天 / 7天 分别统计的 token 消耗）—— 不只是 Claude（Opus / Sonnet / Haiku），**凡是经 Claude Code 跑过的模型都会被统计到**：通过路由 / 代理接入的 GPT、Deepseek 等第三方模型同样会按模型名分别累计
 
 额度数据与 Claude Code 里 `/usage` 命令完全一致 —— 不是估算，而是来自官方额度接口。
 
@@ -32,7 +32,7 @@
 | 数据 | 来源 |
 |------|------|
 | 5h / 周额度利用率 + 刷新时间 | 官方接口 `GET https://api.anthropic.com/api/oauth/usage`，用 Claude Code 存在 **登录钥匙串**（service `Claude Code-credentials`）里的 OAuth token 认证 |
-| 各模型 token 用量 | 本地 transcript `~/.claude/projects/**/*.jsonl` 中每条 assistant 消息的 `usage` 字段（增量扫描，按模型聚合） |
+| 各模型 token 用量 | 本地 transcript `~/.claude/projects/**/*.jsonl` 中每条 assistant 消息的 `usage` 字段（增量扫描，按 `model` 字段聚合）。因为是按消息里写的模型名统计，所以经 Claude Code 调用的**任何**模型（含路由 / 代理接入的 GPT、Deepseek 等）都会自动出现，无需额外配置 |
 
 > **隐私**：所有处理都在本机完成。App 只读取你自己的钥匙串凭证和本地记录，仅向 `api.anthropic.com` 发起你自己的额度查询，不上传任何数据到第三方。
 
