@@ -8,6 +8,12 @@
 
 额度数据与 Claude Code 里 `/usage` 命令完全一致 —— 不是估算，而是来自官方额度接口。
 
+## 截图
+
+| 菜单栏 | 下拉面板 |
+|:---:|:---:|
+| <img src="docs/screenshot-menubar.png" width="360" alt="菜单栏" /> | <img src="docs/screenshot-panel.png" width="360" alt="下拉面板" /> |
+
 ```
 菜单栏:  ⏲ 4% · 3%
          点开 ▼
@@ -73,27 +79,6 @@ open ClaudeMeter.xcodeproj   # 选 ClaudeMeter scheme，Run
 首次运行会弹一次**钥匙串授权框**（“ClaudeMeter 想访问 Claude Code-credentials”），点 **始终允许** 即可。
 
 > 改 bundle id 前缀时，需同步改两处：`project.yml` 和 `Shared/UsageModels.swift` 的 `AppConfig.bundlePrefix`。
-
-## 发布（开源分发）
-
-有 Apple Developer 账号即可发**已签名 + 公证**的版本，别人下载双击即用：
-
-```bash
-# Archive
-xcodebuild -project ClaudeMeter.xcodeproj -scheme ClaudeMeter \
-  -configuration Release -archivePath build/ClaudeMeter.xcarchive archive
-
-# 导出 Developer ID 签名的 .app（需 ExportOptions.plist，method: developer-id）
-xcodebuild -exportArchive -archivePath build/ClaudeMeter.xcarchive \
-  -exportPath build/export -exportOptionsPlist ExportOptions.plist
-
-# 公证
-xcrun notarytool submit build/export/ClaudeMeter.app.zip \
-  --keychain-profile "AC_NOTARY" --wait
-xcrun stapler staple build/export/ClaudeMeter.app
-```
-
-App 是**非沙盒 + 硬化运行时（Hardened Runtime）**，可走 Developer ID 公证（非 App Store）。
 
 ## License
 
