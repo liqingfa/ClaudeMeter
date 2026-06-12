@@ -1,5 +1,7 @@
 # ClaudeMeter
 
+> 支持 **macOS 14 (Sonoma) 及以上**
+
 一个 macOS **菜单栏 App**，实时监测 Claude 的额度使用情况：
 
 - 🕔 **5 小时额度** 利用率 + 精确刷新时间（倒计时）
