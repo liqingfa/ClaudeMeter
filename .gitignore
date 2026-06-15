@@ -12,3 +12,4 @@ xcuserdata/
 *.app
 *.dmg
 *.zip
+build_dmg.sh

@@ -38,7 +38,7 @@ final class AppState: ObservableObject {
             return ""                       // API key / not logged in — icon only
         case .available, .needsLogin, .rateLimited, .unknown:
             guard snapshot.fiveHour != nil || snapshot.sevenDay != nil else { return "" }
-            let five = snapshot.fiveHour.map { Fmt.percent($0.utilization) } ?? "··"
+            let five = snapshot.fiveHour.flatMap { $0.utilization == 0 ? nil : Fmt.percent($0.utilization) } ?? "··"
             let seven = snapshot.sevenDay.map { Fmt.percent($0.utilization) } ?? "··"
             return "\(five) · \(seven)"
         }

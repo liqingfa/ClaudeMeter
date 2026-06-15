@@ -65,6 +65,14 @@ struct ModelUsage: Codable, Equatable, Identifiable {
     }
 }
 
+struct DailyUsage: Codable, Equatable, Identifiable {
+    var day: String
+    var models: [ModelUsage]
+
+    var id: String { day }
+    var activeTokens: Int { models.reduce(0) { $0 + $1.activeTokens } }
+}
+
 /// Availability of the subscription rate-limit quotas (5h / weekly). These only
 /// exist for Claude.ai subscriptions (Pro/Max); API-key, Bedrock/Vertex, or
 /// logged-out setups have no such windows.
@@ -84,13 +92,68 @@ struct UsageSnapshot: Codable, Equatable {
     var modelsAll: [ModelUsage]     // all-time
     var models30d: [ModelUsage]     // last 30 days
     var models7d: [ModelUsage]      // last 7 days
+    var modelsToday: [ModelUsage]   // today, up to now
+    var models3d: [ModelUsage]      // today + previous 2 days
+    var daily3d: [DailyUsage]       // newest day first
     var updatedAt: Date
     /// Optional extra detail for the current quota state (e.g. HTTP error text).
     var error: String?
 
+    enum CodingKeys: String, CodingKey {
+        case fiveHour, sevenDay, quotaState, modelsAll, models30d, models7d, modelsToday, models3d, daily3d, updatedAt, error
+    }
+
+    init(
+        fiveHour: WindowUsage?, sevenDay: WindowUsage?, quotaState: QuotaState,
+        modelsAll: [ModelUsage], models30d: [ModelUsage], models7d: [ModelUsage],
+        modelsToday: [ModelUsage], models3d: [ModelUsage], daily3d: [DailyUsage], updatedAt: Date, error: String?
+    ) {
+        self.fiveHour = fiveHour
+        self.sevenDay = sevenDay
+        self.quotaState = quotaState
+        self.modelsAll = modelsAll
+        self.models30d = models30d
+        self.models7d = models7d
+        self.modelsToday = modelsToday
+        self.models3d = models3d
+        self.daily3d = daily3d
+        self.updatedAt = updatedAt
+        self.error = error
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        fiveHour = try c.decodeIfPresent(WindowUsage.self, forKey: .fiveHour)
+        sevenDay = try c.decodeIfPresent(WindowUsage.self, forKey: .sevenDay)
+        quotaState = try c.decodeIfPresent(QuotaState.self, forKey: .quotaState) ?? .unknown
+        modelsAll = try c.decodeIfPresent([ModelUsage].self, forKey: .modelsAll) ?? []
+        models30d = try c.decodeIfPresent([ModelUsage].self, forKey: .models30d) ?? []
+        models7d = try c.decodeIfPresent([ModelUsage].self, forKey: .models7d) ?? []
+        modelsToday = try c.decodeIfPresent([ModelUsage].self, forKey: .modelsToday) ?? []
+        models3d = try c.decodeIfPresent([ModelUsage].self, forKey: .models3d) ?? []
+        daily3d = try c.decodeIfPresent([DailyUsage].self, forKey: .daily3d) ?? []
+        updatedAt = try c.decodeIfPresent(Date.self, forKey: .updatedAt) ?? .distantPast
+        error = try c.decodeIfPresent(String.self, forKey: .error)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encodeIfPresent(fiveHour, forKey: .fiveHour)
+        try c.encodeIfPresent(sevenDay, forKey: .sevenDay)
+        try c.encode(quotaState, forKey: .quotaState)
+        try c.encode(modelsAll, forKey: .modelsAll)
+        try c.encode(models30d, forKey: .models30d)
+        try c.encode(models7d, forKey: .models7d)
+        try c.encode(modelsToday, forKey: .modelsToday)
+        try c.encode(models3d, forKey: .models3d)
+        try c.encode(daily3d, forKey: .daily3d)
+        try c.encode(updatedAt, forKey: .updatedAt)
+        try c.encodeIfPresent(error, forKey: .error)
+    }
+
     static let empty = UsageSnapshot(
         fiveHour: nil, sevenDay: nil, quotaState: .unknown,
-        modelsAll: [], models30d: [], models7d: [],
+        modelsAll: [], models30d: [], models7d: [], modelsToday: [], models3d: [], daily3d: [],
         updatedAt: .distantPast, error: nil
     )
 
@@ -104,11 +167,16 @@ struct UsageSnapshot: Codable, Equatable {
             ModelUsage(model: "claude-haiku-4-5-20251001", inputTokens: 5_000, outputTokens: 3_000,
                        cacheCreationTokens: 1_000, cacheReadTokens: 40_000),
         ]
+        let daily = [
+            DailyUsage(day: "2026-06-15", models: models),
+            DailyUsage(day: "2026-06-14", models: models),
+            DailyUsage(day: "2026-06-13", models: models),
+        ]
         return UsageSnapshot(
             fiveHour: WindowUsage(utilization: 42, resetsAt: Date().addingTimeInterval(2 * 3600)),
             sevenDay: WindowUsage(utilization: 18, resetsAt: Date().addingTimeInterval(4 * 86_400)),
             quotaState: .available,
-            modelsAll: models, models30d: models, models7d: models,
+            modelsAll: models, models30d: models, models7d: models, modelsToday: models, models3d: models, daily3d: daily,
             updatedAt: Date(), error: nil
         )
     }()

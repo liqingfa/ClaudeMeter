@@ -13,6 +13,9 @@ actor DataStore {
     private var lastModelsAll: [ModelUsage] = []
     private var lastModels30d: [ModelUsage] = []
     private var lastModels7d: [ModelUsage] = []
+    private var lastModelsToday: [ModelUsage] = []
+    private var lastModels3d: [ModelUsage] = []
+    private var lastDaily3d: [DailyUsage] = []
     private var lastScan: Date = .distantPast
 
     // Cached quota windows so transient failures (429, network) keep showing
@@ -50,6 +53,9 @@ actor DataStore {
             lastModelsAll = result.all
             lastModels30d = result.d30
             lastModels7d = result.d7
+            lastModelsToday = result.today
+            lastModels3d = result.d3
+            lastDaily3d = result.daily3d
             lastScan = now
         }
 
@@ -60,6 +66,9 @@ actor DataStore {
             modelsAll: lastModelsAll,
             models30d: lastModels30d,
             models7d: lastModels7d,
+            modelsToday: lastModelsToday,
+            models3d: lastModels3d,
+            daily3d: lastDaily3d,
             updatedAt: now,
             error: lastError
         )

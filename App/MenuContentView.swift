@@ -6,8 +6,10 @@ struct MenuContentView: View {
 
     enum Scope: String, CaseIterable, Identifiable {
         case all = "全部"
-        case thirtyDay = "30天"
+        case today = "今天"
+        case threeDay = "3天"
         case sevenDay = "7天"
+        case thirtyDay = "30天"
         var id: String { rawValue }
     }
 
@@ -15,10 +17,14 @@ struct MenuContentView: View {
     private var models: [ModelUsage] {
         switch modelScope {
         case .all:       return snap.modelsAll
-        case .thirtyDay: return snap.models30d
+        case .today:     return snap.modelsToday
+        case .threeDay:  return snap.models3d
         case .sevenDay:  return snap.models7d
+        case .thirtyDay: return snap.models30d
         }
     }
+    private var dailyBuckets: [DailyUsage] { snap.daily3d }
+    private var showingDaily: Bool { modelScope == .today || modelScope == .threeDay }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -30,7 +36,7 @@ struct MenuContentView: View {
             footer
         }
         .padding(16)
-        .frame(width: 320)
+        .frame(width: 360)
     }
 
     // MARK: Sections
@@ -115,7 +121,7 @@ struct MenuContentView: View {
                 }
                 .pickerStyle(.segmented)
                 .labelsHidden()
-                .frame(width: 150)
+                .frame(width: 220)
             }
 
             if models.isEmpty {
@@ -126,6 +132,16 @@ struct MenuContentView: View {
                 let maxActive = models.map(\.activeTokens).max() ?? 1
                 ForEach(models) { m in
                     ModelRow(model: m, maxActive: maxActive)
+                }
+            }
+
+            if showingDaily, !dailyBuckets.isEmpty {
+                Divider().padding(.vertical, 2)
+                Text("按天统计")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                ForEach(modelScope == .today ? dailyBuckets.prefix(1).map { $0 } : dailyBuckets) { day in
+                    DailyRow(day: day)
                 }
             }
         }
@@ -201,6 +217,31 @@ private struct ModelRow: View {
                 fraction: maxActive > 0 ? Double(model.activeTokens) / Double(maxActive) : 0,
                 color: .accentColor, height: 4
             )
+        }
+    }
+}
+
+private struct DailyRow: View {
+    let day: DailyUsage
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text(day.day)
+                    .font(.caption.weight(.medium))
+                Spacer()
+                Text(Fmt.tokens(day.activeTokens))
+                    .font(.caption2.monospacedDigit())
+                    .foregroundStyle(.secondary)
+            }
+
+            if !day.models.isEmpty {
+                let top = day.models.prefix(3).map { "\($0.displayName) \(Fmt.tokens($0.activeTokens))" }
+                Text(top.joined(separator: " · "))
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            }
         }
     }
 }

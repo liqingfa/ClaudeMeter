@@ -59,10 +59,34 @@ final class LocalTokenScanner {
 
     /// Reads any new transcript data, prunes old day buckets, persists state,
     /// and returns per-model totals for the all-time / 30-day / 7-day scopes.
-    func refresh() -> (all: [ModelUsage], d30: [ModelUsage], d7: [ModelUsage]) {
+    func refresh() -> (all: [ModelUsage], d30: [ModelUsage], d7: [ModelUsage], today: [ModelUsage], d3: [ModelUsage], daily3d: [DailyUsage]) {
         scanNewData()
         pruneAndSave()
-        return (aggregate(daysBack: nil), aggregate(daysBack: 30), aggregate(daysBack: 7))
+        return (
+            aggregate(daysBack: nil),
+            aggregate(daysBack: 30),
+            aggregate(daysBack: 7),
+            aggregate(daysBack: 1),
+            aggregate(daysBack: 3),
+            dailyAggregate(daysBack: 3)
+        )
+    }
+
+    func dailyAggregate(daysBack: Int) -> [DailyUsage] {
+        let cal = Calendar.current
+        let start = cal.date(byAdding: .day, value: -(daysBack - 1), to: cal.startOfDay(for: Date()))!
+        let threshold = dayFormatter.string(from: start)
+        return state.daily
+            .filter { $0.key >= threshold }
+            .map { day, models in
+                DailyUsage(
+                    day: day,
+                    models: models
+                        .map { $0.value.usage(model: $0.key) }
+                        .sorted { $0.activeTokens > $1.activeTokens }
+                )
+            }
+            .sorted { $0.day > $1.day }
     }
 
     // MARK: Scanning
