@@ -2,14 +2,14 @@ import SwiftUI
 
 struct MenuContentView: View {
     @EnvironmentObject private var state: AppState
-    @State private var modelScope: Scope = .sevenDay
+    @State private var modelScope: Scope = .today
 
     enum Scope: String, CaseIterable, Identifiable {
-        case all = "全部"
         case today = "今天"
         case threeDay = "3天"
         case sevenDay = "7天"
         case thirtyDay = "30天"
+        case all = "全部"
         var id: String { rawValue }
     }
 
@@ -24,7 +24,7 @@ struct MenuContentView: View {
         }
     }
     private var dailyBuckets: [DailyUsage] { snap.daily3d }
-    private var showingDaily: Bool { modelScope == .today || modelScope == .threeDay }
+    private var showingDaily: Bool { modelScope == .threeDay }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -140,7 +140,7 @@ struct MenuContentView: View {
                 Text("按天统计")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)
-                ForEach(modelScope == .today ? dailyBuckets.prefix(1).map { $0 } : dailyBuckets) { day in
+                ForEach(dailyBuckets) { day in
                     DailyRow(day: day)
                 }
             }
